@@ -4,15 +4,15 @@ Main.java
  Main
 POJO/Brand.java
  POJO.Brand
-PriceChangeResponseApi.java
- PriceChangeResponseApi
-POJO/Product.java
- POJO.Product
-POJO/PriceChangeResponse.java
- POJO.PriceChangeResponse
-MyTask.java
- MyTask
 SQLiteJDBC.java
  SQLiteJDBC
 Task.java
  Task
+POJO/PriceChangeResponse.java
+ POJO.PriceChangeResponse
+MyTask.java
+ MyTask
+POJO/Product.java
+ POJO.Product
+PriceChangeResponseApi.java
+ PriceChangeResponseApi

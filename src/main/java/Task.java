@@ -24,9 +24,11 @@ import java.util.regex.Pattern;
 public class Task implements Runnable{
 
     public static int i;
+    static java.sql.Connection c;
 
-    public Task(int i){
+    public Task(int i, java.sql.Connection c){
         Task.i = i;
+        Task.c = c;
     }
 
     @Override
@@ -144,7 +146,7 @@ public class Task implements Runnable{
 //                        response.getDiscount(),
 //                        weight,
 //                        color
-                ));
+                ), c);
             }
         }
 

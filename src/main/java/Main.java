@@ -7,7 +7,6 @@ import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,6 +18,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import sun.nio.ch.ThreadPool;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -38,7 +41,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-//        SQLiteJDBC.createTable();
+        SQLiteJDBC.createTable();
         /// https://www.khanoumi.com/newproduct?thisID={id}
 
 //        for (int i = 1; i <= 99999; i++){
@@ -49,36 +52,57 @@ public class Main {
 //            r.run();
 //
 //        }
-        
+
+        Connection c = null;
+        Statement stmt = null;
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+            c.setAutoCommit(false);
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+
 
         Observable<Integer> observable1 = Observable.range(1,24999);
         Observable<Integer> observable2 = Observable.range(25000,49999);
         Observable<Integer> observable3 = Observable.range(50000,74999);
         Observable<Integer> observable4 = Observable.range(75000,99999);
 
+        Connection finalC = c;
         observable1.doOnNext(x ->{
             System.out.println(ANSI_CYAN + x +"- 1st getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x);
+            Runnable r = new Task(x, finalC);
             r.run();
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
+        Connection finalC1 = c;
         observable2.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 2nd getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x);
+            Runnable r = new Task(x, finalC1);
             r.run();
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
+        Connection finalC2 = c;
         observable3.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 3rd getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x);
+            Runnable r = new Task(x, finalC2);
             r.run();
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
+        Connection finalC3 = c;
         observable4.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 4th getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x);
+            Runnable r = new Task(x, finalC3);
             r.run();
         }).subscribe();
+
+        try {
+            c.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
 
 //        Observable<Integer> o1 = Observable.create(emitter -> {
 //            emitter.onNext(1);

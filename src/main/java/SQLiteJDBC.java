@@ -36,7 +36,7 @@ public class SQLiteJDBC {
 
                     // ID's PRIMARY KEY DELETED
 
-                    "(ID             TEXT, " +
+                    "(ID             INT, " +
                     " name           TEXT, " +
                     " size           TEXT, " +
                     " color          TEXT, " +
@@ -55,24 +55,24 @@ public class SQLiteJDBC {
         System.out.println("Table created successfully");
     }
 
-    public static void insert(CompleteProduct product) {
+    public static void insert(CompleteProduct product, Connection c) {
 //        Connection c = null;
-//        Statement stmt = null;
+        Statement stmt = null;
 
         try {
-            Class.forName("org.sqlite.JDBC");
-            Connection c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
-            c.setAutoCommit(false);
-            System.out.println("Opened database successfully");
+//            Class.forName("org.sqlite.JDBC");
+//            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+//            c.setAutoCommit(false);
+//            System.out.println("Opened database successfully");
 
-            Statement stmt = c.createStatement();
+            stmt = c.createStatement();
             String sql = "INSERT INTO PRODUCTS (ID,name,size,color,sizeId,colorId,price,discount) " +
                     "VALUES ('" + product.getId() + "', '" + product.getName() + "', '" + product.getSize() + "', '" + product.getColor() + "', '" + product.getSizeId() + "', '" + product.getColorId() +"', '" + product.getPrice() + "', '" + product.getDiscount() +"' );";
             stmt.executeUpdate(sql);
 
             stmt.close();
             c.commit();
-            c.close();
+//            c.close();
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
