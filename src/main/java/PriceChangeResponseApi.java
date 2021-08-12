@@ -6,8 +6,6 @@ import retrofit2.http.Query;
 
 public interface PriceChangeResponseApi {
 
-
-
     @GET("products/pricechange")
     Call<PriceChangeResponse> getPosts(
             @Query("weightID") String weightId,

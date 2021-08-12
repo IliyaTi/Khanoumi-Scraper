@@ -3,6 +3,7 @@ package POJO;
 public class CompleteProduct {
 
     private int id;
+    private String brand;
     private String name;
     private int price;
     private int discount;
@@ -13,8 +14,23 @@ public class CompleteProduct {
     private String link;
     private int count;
 
-    public CompleteProduct(int id, String name, int price, int discount, String size, String color, String sizeId, String colorId) {
+    public CompleteProduct(int id, String brand, String name, int price, int discount, String size, String color, String sizeId, String colorId, String link, int count) {
         this.id = id;
+        this.brand = brand;
+        this.name = name;
+        this.price = price;
+        this.discount = discount;
+        this.size = size;
+        this.color = color;
+        this.sizeId = sizeId;
+        this.colorId = colorId;
+        this.link = link;
+        this.count = count;
+    }
+
+    public CompleteProduct(int id, String brand, String name, int price, int discount, String size, String color, String sizeId, String colorId) {
+        this.id = id;
+        this.brand = brand;
         this.name = name;
         this.price = price;
         this.discount = discount;
@@ -125,5 +141,13 @@ public class CompleteProduct {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
 }

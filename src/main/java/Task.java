@@ -8,14 +8,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
 import java.io.IOException;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -32,7 +28,7 @@ public class Task implements Runnable{
     }
 
     @Override
-    public void run() {
+    public void run () {
             getData(i);
     }
 
@@ -46,33 +42,58 @@ public class Task implements Runnable{
     public static final String ANSI_CYAN = "\u001B[36m";
     public static final String ANSI_WHITE = "\u001B[37m";
 
+    public static Document docMaker(String url,int productId) throws IOException {
+//        try {
+            Connection.Response response = Jsoup.connect(url).timeout(99999999).ignoreHttpErrors(true).execute();
+
+            if (response.statusCode() == 500){
+                System.out.println(ANSI_YELLOW + productId + "- response code = 500" + ANSI_RESET);
+                return null;
+            }
+            return response.parse();
+//        } catch (IOException e) {
+//            System.err.println("FUCK");
+//            getData(productId);
+////            return;
+//        }
+    }
+
     public static void getData (int productId) {
-        Document document;
+
+//        System.out.println(ANSI_CYAN + i +"- " + Thread.currentThread().getName() +" getting product " + "-------------------------------------"+ ANSI_RESET);
+
+        Document document = null;
         Product product = new Product();
         product.setId(productId);
 
         String url = "https://www.khanoumi.com/newproduct?thisID=" + productId;
 
 
-
         try {
-            Connection.Response response = Jsoup.connect(url).ignoreHttpErrors(true).execute();
-
-            if (response.statusCode() == 500){
-                System.out.println(ANSI_YELLOW + productId + "- response code = 500" + ANSI_RESET);
-                return;
-            }
-            document = response.parse();
-
+            document = docMaker(url,productId);
+            if (document == null) return;
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
 
-        String title = document.select("div.subTitleContainer").select("h2").first().text().replaceAll("'", "");
-        String brand = document.select("h3.mokamelTitle").first().select("a").attr("href");
-        System.err.println(brand);
+//        try {
+//            Connection.Response response = Jsoup.connect(url).ignoreHttpErrors(true).execute();
+//
+//            if (response.statusCode() == 500){
+//                System.out.println(ANSI_YELLOW + productId + "- response code = 500" + ANSI_RESET);
+//                return;
+//            }
+//            document = response.parse();
+//        } catch (IOException e) {
+//            System.err.println("FUCK");
+//            getData(productId);
+////            return;
+//        }
 
+        String title = document.select("div.subTitleContainer").select("h2").first().text().replaceAll("'", "");
+        String brand = document.select("div.brand").select("a[href]").attr("href").replaceAll("/", "");
+        product.setBrand(brand);
+        SQLiteJDBC.insertIntoBrands(brand,c);
 
         product.setName(title);
         System.out.println(title);
@@ -85,7 +106,7 @@ public class Task implements Runnable{
             for (Element weight : weightElements) {
                 String weightId = weight.attributes().get("data-weightid");
                 String desc = weight.text();
-                System.out.println(ANSI_PURPLE + desc + ANSI_RESET);
+//                System.out.println(ANSI_PURPLE + desc + ANSI_RESET);
                 weights.add(weightId);
                 weightsDesc.add(desc);
             }
@@ -102,21 +123,40 @@ public class Task implements Runnable{
         ArrayList<String> colorsDesc = new ArrayList<>();
 
         Elements colorElements = document.select("span[class=clr cunselect]");
-        if (colorElements.size() > 0) {
-            for (Element color : colorElements) {
-                String colorId = color.attributes().get("data-colorid");
-                String colorDesc = color.attributes().get("data-colorname");
-                colors.add(colorId);
-                colorsDesc.add(colorDesc);
 
+
+        if (!document.select("div.colrosPallet").isEmpty()){
+            if (colorElements.size() > 0) {
+                for (Element color : colorElements) {
+                    String colorId = color.attributes().get("data-colorid");
+                    String colorDesc = color.attributes().get("data-colorname");
+                    colors.add(colorId);
+                    colorsDesc.add(colorDesc);
+                }
+
+//        Elements colorElements = document.select("span[class=clr cunselect]");
+//        if (colorElements.size() > 0) {
+//            for (Element color : colorElements) {
+//                String colorId = color.attributes().get("data-colorid");
+//                String colorDesc = color.attributes().get("data-colorname");
+//                colors.add(colorId);
+//                colorsDesc.add(colorDesc);
+
+            } else if (document.select("div.colrosPallet").first().select("div").first().select("script").first() != null){
+                String script = document.select("div.colrosPallet").first().select("div").first().select("script").first().toString();
+                colors.add(matchTheShits(script));
+            } else { //TODO: fast fix
+                String script = document.select("div.colrosPallet").first().select("div").first().select("span").attr("data-colorid");
+                colors.add(script);
+//            System.err.println(script);
             }
-        } else if (document.select("div.colrosPallet").first().select("div").first().select("script").first() != null){
-            String script = document.select("div.colrosPallet").first().select("div").first().select("script").first().toString();
-            colors.add(matchTheShits(script));
-        } else { //TODO: fast fix
-            String script = document.select("div.colrosPallet").first().select("div").first().select("span").attr("data-colorid");
-            colors.add(script);
-            System.err.println(script);
+//        } else if (document.select("div.colrosPallet").first().select("div").first().select("script").first() != null){
+//            String script = document.select("div.colrosPallet").first().select("div").first().select("script").first().toString();
+//            colors.add(matchTheShits(script));
+//        } else { //TODO: fast fix
+//            String script = document.select("div.colrosPallet").first().select("div").first().select("span").attr("data-colorid");
+//            colors.add(script);
+//            System.err.println(script);
         }
         product.setColors(colors);
         product.setColorDescs(colorsDesc);
@@ -126,12 +166,13 @@ public class Task implements Runnable{
         for (int i = 0; i < product.getSizes().size(); i++){
 //            for (String color : product.getColors()){
             for (int j = 0; j < product.getColors().size(); j++){
-                System.out.println("weight = " + product.getSizes().get(i) + " && color = " + product.getColors().get(j));
+//                System.out.println("weight = " + product.getSizes().get(i) + " && color = " + product.getColors().get(j));
 
                 PriceChangeResponse response = priceChangeRequest(product.getSizes().get(i),product.getColors().get(j));
                 int result = (response.getBasePrice() + response.getColorPrice() + response.getWeightPrice());
                 SQLiteJDBC.insert(new CompleteProduct(
                         product.getId(),
+                        product.getBrand(),
                         product.getName(),
                         result,
                         response.getDiscount(),
@@ -149,8 +190,6 @@ public class Task implements Runnable{
                 ), c);
             }
         }
-
-
     }
 
     public static String matchTheShits(String input) {
@@ -174,7 +213,7 @@ public class Task implements Runnable{
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://www.khanoumi.com/")
-//                .client(okHttpClient)
+                .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
@@ -196,11 +235,87 @@ public class Task implements Runnable{
 //        });
         try {
             Response<PriceChangeResponse> response = call.execute();
-            return response.body();
+            if (response.body() != null){
+                return response.body();
+            } else {return new PriceChangeResponse();}
         } catch (Exception e){
             e.printStackTrace();
+//            return new PriceChangeResponse();
         }
         return priceChangeRequest(weightId, colorId);
+    }
+
+    public static checkRepositoryResponse checkRepository (String productId, String colorId, String weightId, String count) {
+        String baseUrl = "https://www.khanoumi.com/";
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                .build();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        CheckRepositoryApi checkRepositoryApi = retrofit.create(CheckRepositoryApi.class);
+
+        Call<checkRepositoryResponse> call = checkRepositoryApi.getPosts(productId, count, colorId, weightId);
+
+        try {
+            Response<checkRepositoryResponse> response = call.execute();
+            return response.body();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return checkRepository(productId, colorId, weightId, count);
+
+    }
+
+    public static int binarySearch (String productId, String colorId, String weightId) throws Throwable {
+
+        int min = 0;
+        int max = 500;
+        int middle = 250;
+        String[] triple;
+        int target;
+
+        while (max - min >= 2) {
+            middle = (min + max)/2;
+            System.out.println(middle);
+            switch (checkRepository(productId, colorId, weightId, String.valueOf(middle)).getStatus()) {
+                case "true":
+                    min = middle;
+                    break;
+                case "false":
+                    max = middle;
+                    break;
+            }
+        }
+
+        triple = new String[]{
+                checkRepository(productId, colorId, weightId, String.valueOf(middle - 1)).getStatus(),
+                checkRepository(productId, colorId, weightId, String.valueOf(middle)).getStatus(),
+                checkRepository(productId, colorId, weightId, String.valueOf(middle + 1)).getStatus()
+        };
+
+//        System.out.println(triple[0] + triple[1] + triple[2]);
+
+        switch (triple[0] + triple[1] + triple[2]){
+            case "truefalsefalse":
+                target = middle - 1;
+                break;
+            case "truetruefalse":
+                target = middle;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + triple[0] + triple[1] + triple[2]);
+        }
+//        System.out.println("target is: " + target);
+        return target;
     }
 
 

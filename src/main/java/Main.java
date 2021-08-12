@@ -2,9 +2,9 @@ import POJO.CompleteProduct;
 import POJO.PriceChangeResponse;
 import POJO.Product;
 import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.core.*;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.observers.DisposableSingleObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import org.jsoup.Jsoup;
@@ -23,9 +23,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main {
 
@@ -44,14 +48,15 @@ public class Main {
         SQLiteJDBC.createTable();
         /// https://www.khanoumi.com/newproduct?thisID={id}
 
-//        for (int i = 1; i <= 99999; i++){
-//            System.out.println(ANSI_CYAN + i +"- getting product " + "-------------------------------------"+ ANSI_RESET);
-//
-//            Runnable r = new Task(i);
-//
-//            r.run();
-//
+
+//        try {
+//            Task.binarySearch("4429", "5675", "5433");
+//            Task.binarySearch("15581", "19368", "16610");
+//            Task.binarySearch("4490", "6064", "5505");
+//        } catch (Throwable throwable) {
+//            throwable.printStackTrace();
 //        }
+
 
         Connection c = null;
         Statement stmt = null;
@@ -64,11 +69,10 @@ public class Main {
             e.printStackTrace();
         }
 
-
-        Observable<Integer> observable1 = Observable.range(1,24999);
-        Observable<Integer> observable2 = Observable.range(25000,49999);
-        Observable<Integer> observable3 = Observable.range(50000,74999);
-        Observable<Integer> observable4 = Observable.range(75000,99999);
+        Observable<Integer> observable1 = Observable.range(75000,99999);
+        Observable<Integer> observable2 = Observable.range(50000,74999);
+        Observable<Integer> observable3 = Observable.range(25000,49999);
+        Observable<Integer> observable4 = Observable.range(    1,24999);
 
         Connection finalC = c;
         observable1.doOnNext(x ->{
@@ -92,17 +96,31 @@ public class Main {
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
         Connection finalC3 = c;
-        observable4.doOnNext(x -> {
+        Disposable observer = observable4.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 4th getting product " + "-------------------------------------"+ ANSI_RESET);
             Runnable r = new Task(x, finalC3);
             r.run();
-        }).subscribe();
+        }).doOnComplete(() -> Thread.sleep(999999999)).subscribe();
+
 
         try {
             c.close();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//        ExecutorService service = Executors.newFixedThreadPool(4);
+//
+//        for (int i = 1; i < 99999; i++){
+//
+//            Runnable runnable = new Task(i,c);
+//            service.execute(runnable);
+//        }
+
+//        observer.notify();
+
 
 //        Observable<Integer> o1 = Observable.create(emitter -> {
 //            emitter.onNext(1);
@@ -171,8 +189,4 @@ public class Main {
 
 
     }
-
-    public static void test(){}
-
-
 }

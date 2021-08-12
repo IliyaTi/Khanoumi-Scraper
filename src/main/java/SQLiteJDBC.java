@@ -2,19 +2,18 @@
 import POJO.CompleteProduct;
 import POJO.Product;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 public class SQLiteJDBC {
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_RESET = "\u001B[0m";
 
     public static void connectToDatabase() {
         Connection c = null;
 
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
@@ -36,15 +35,18 @@ public class SQLiteJDBC {
 
                     // ID's PRIMARY KEY DELETED
 
-                    "(ID             INT, " +
-                    " name           TEXT, " +
-                    " size           TEXT, " +
-                    " color          TEXT, " +
-                    " sizeId         TEXT, " +
-                    " colorId        TEXT, " +
-                    " price          INT, " +
-                    " discount       INT, " +
-                    " count          INT)";
+                    "(no           INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "ID             int, " +
+                    " brand          varchar, " +
+                    " name           varchar, " +
+                    " size           varchar, " +
+                    " color          varchar, " +
+                    " sizeId         int, " +
+                    " colorId        int, " +
+                    " price          int, " +
+                    " discount       int, " +
+                    " count          int," +
+                    "foreign key (brand) references brands(brandName));";
             stmt.executeUpdate(sql);
             stmt.close();
             c.close();
@@ -53,6 +55,21 @@ public class SQLiteJDBC {
             System.exit(0);
         }
         System.out.println("Table created successfully");
+    }
+
+
+    public static void insertIntoBrands(String name,Connection connection){
+        Statement stmt = null;
+
+        try {
+            stmt = connection.createStatement();
+            String sql = "insert or replace into brands values ('" + name + "')";
+            stmt.executeUpdate(sql);
+            stmt.close();
+            connection.commit();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     public static void insert(CompleteProduct product, Connection c) {
@@ -66,18 +83,18 @@ public class SQLiteJDBC {
 //            System.out.println("Opened database successfully");
 
             stmt = c.createStatement();
-            String sql = "INSERT INTO PRODUCTS (ID,name,size,color,sizeId,colorId,price,discount) " +
-                    "VALUES ('" + product.getId() + "', '" + product.getName() + "', '" + product.getSize() + "', '" + product.getColor() + "', '" + product.getSizeId() + "', '" + product.getColorId() +"', '" + product.getPrice() + "', '" + product.getDiscount() +"' );";
+            String sql = "INSERT INTO PRODUCTS (ID,brand,name,size,color,sizeId,colorId,price,discount) " +
+                    "VALUES ('" + product.getId() +"', '" + product.getBrand() + "', '" + product.getName() + "', '" + product.getSize() + "', '" + product.getColor() + "', '" + product.getSizeId() + "', '" + product.getColorId() +"', '" + product.getPrice() + "', '" + product.getDiscount() +"' );";
             stmt.executeUpdate(sql);
 
             stmt.close();
             c.commit();
 //            c.close();
         } catch ( Exception e ) {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            e.printStackTrace();
             System.exit(0);
         }
-        System.out.println("Records created successfully");
+        System.out.println(ANSI_PURPLE + "Records created successfully for " + product.getId() + " - " + product.getName() + ANSI_RESET);
     }
 
     public static ResultSet select() {
