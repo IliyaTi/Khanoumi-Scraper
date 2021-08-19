@@ -6,6 +6,8 @@ import io.reactivex.rxjava3.core.*;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.observers.DisposableSingleObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import okhttp3.OkHttpClient;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -15,13 +17,12 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import sun.nio.ch.ThreadPool;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,8 +46,10 @@ public class Main {
 
 
     public static void main(String[] args) {
-        SQLiteJDBC.createTable();
+        SQLiteJDBC.createProductsTable();
+        SQLiteJDBC.createBrandsTable();
         /// https://www.khanoumi.com/newproduct?thisID={id}
+
 
 
 //        try {
@@ -61,6 +64,11 @@ public class Main {
         Connection c = null;
         Statement stmt = null;
 
+        RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+                .handle(Exception.class)
+                .withDelay(Duration.ofSeconds(1))
+                .withMaxRetries(3);
+
         try {
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
@@ -69,37 +77,41 @@ public class Main {
             e.printStackTrace();
         }
 
-        Observable<Integer> observable1 = Observable.range(75000,99999);
-        Observable<Integer> observable2 = Observable.range(50000,74999);
-        Observable<Integer> observable3 = Observable.range(25000,49999);
-        Observable<Integer> observable4 = Observable.range(    1,24999);
+        Observable<Integer> observable1 = Observable.range(75000,25000);
+        Observable<Integer> observable2 = Observable.range(50000,25000);
+        Observable<Integer> observable3 = Observable.range(25000,25000);
+        Observable<Integer> observable4 = Observable.range(    1,25000);
 
         Connection finalC = c;
         observable1.doOnNext(x ->{
             System.out.println(ANSI_CYAN + x +"- 1st getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x, finalC);
-            r.run();
-        }).subscribeOn(Schedulers.newThread()).subscribe();
+//            Runnable r = new Task(x, finalC);
+            Failsafe.with(retryPolicy).run(new Task(x, finalC)::run);
+//            r.run();
+        }).subscribeOn(Schedulers.newThread()).doOnComplete(() -> System.out.println("finished")).subscribe();
 
         Connection finalC1 = c;
         observable2.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 2nd getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x, finalC1);
-            r.run();
+//            Runnable r = new Task(x, finalC1);
+            Failsafe.with(retryPolicy).run(new Task(x,finalC1)::run);
+//            r.run();
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
         Connection finalC2 = c;
         observable3.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 3rd getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x, finalC2);
-            r.run();
+//            Runnable r = new Task(x, finalC2);
+            Failsafe.with(retryPolicy).run(new Task(x, finalC2)::run);
+//            r.run();
         }).subscribeOn(Schedulers.newThread()).subscribe();
 
         Connection finalC3 = c;
-        Disposable observer = observable4.doOnNext(x -> {
+        observable4.doOnNext(x -> {
             System.out.println(ANSI_CYAN + x +"- 4th getting product " + "-------------------------------------"+ ANSI_RESET);
-            Runnable r = new Task(x, finalC3);
-            r.run();
+//            Runnable r = new Task(x, finalC3);
+            Failsafe.with(retryPolicy).run(new Task(x, finalC3)::run);
+//            r.run();
         }).doOnComplete(() -> Thread.sleep(999999999)).subscribe();
 
 

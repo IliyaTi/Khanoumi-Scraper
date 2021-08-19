@@ -21,7 +21,7 @@ public class SQLiteJDBC {
         System.out.println("Opened database successfully");
     }
 
-    public static void createTable() {
+    public static void createProductsTable() {
         Connection c = null;
         Statement stmt = null;
 
@@ -31,7 +31,7 @@ public class SQLiteJDBC {
             System.out.println("Opened database successfully");
 
             stmt = c.createStatement();
-            String sql = "CREATE TABLE PRODUCTS " +
+            String sql = "CREATE TABLE IF NOT EXISTS PRODUCTS " +
 
                     // ID's PRIMARY KEY DELETED
 
@@ -57,6 +57,23 @@ public class SQLiteJDBC {
         System.out.println("Table created successfully");
     }
 
+    public static void createBrandsTable(){
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+            stmt = c.createStatement();
+            String sql = "CREATE TABLE IF NOT EXISTS brands " +
+                    "(name       VARCHAR PRIMARY KEY)";
+            stmt.executeUpdate(sql);
+            stmt.close();
+            c.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public static void insertIntoBrands(String name,Connection connection){
         Statement stmt = null;
@@ -72,7 +89,7 @@ public class SQLiteJDBC {
         }
     }
 
-    public static void insert(CompleteProduct product, Connection c) {
+    public static void insertIntoProducts(CompleteProduct product, Connection c) {
 //        Connection c = null;
         Statement stmt = null;
 

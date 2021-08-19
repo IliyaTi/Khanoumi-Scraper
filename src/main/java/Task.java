@@ -90,8 +90,8 @@ public class Task implements Runnable{
 ////            return;
 //        }
 
-        String title = document.select("div.subTitleContainer").select("h2").first().text().replaceAll("'", "");
-        String brand = document.select("div.brand").select("a[href]").attr("href").replaceAll("/", "");
+        String title = document.select("div.subTitleContainer").select("h2").first().text().replaceAll("/", "").replaceAll("'", "");
+        String brand = document.select("div.brand").select("a[href]").attr("href").replaceAll("/", "").replaceAll("'", "");
         product.setBrand(brand);
         SQLiteJDBC.insertIntoBrands(brand,c);
 
@@ -111,7 +111,20 @@ public class Task implements Runnable{
                 weightsDesc.add(desc);
             }
         } else {
-            weights.add(document.select("#vazn").first().val());
+//            weights.add(document.select("#vazn").first().val());
+//            weights.add(document.select("input#vazn").first().attr("value"));
+
+            /*
+              BECAUSE OF THE INPUT WAS OF TYPE "HIDDEN", IN ORDER TO GET DATA FROM IT I HAD TO DOUBLE THE REQUESTS IN ORDER TO GET THE
+              COOKIES FROM ONE REQUEST AND APPLY THEM IN THE OTHER REQUEST. TO PREVENT TO DO SO, I DIGGED INSIDE THE SCRIPTS AND EXPORT
+              THE WEIGHT ID FROM THERE.
+            */
+
+           String script = document.select("div.prosize").first().select("script").dataNodes().toString();
+           Pattern numbers = Pattern.compile("\\d+");
+           Matcher matcher = numbers.matcher(script);
+           if (matcher.find()) weights.add(matcher.group());
+
         }
         product.setSizes(weights);
         product.setSizeDescs(weightsDesc);
@@ -170,7 +183,7 @@ public class Task implements Runnable{
 
                 PriceChangeResponse response = priceChangeRequest(product.getSizes().get(i),product.getColors().get(j));
                 int result = (response.getBasePrice() + response.getColorPrice() + response.getWeightPrice());
-                SQLiteJDBC.insert(new CompleteProduct(
+                SQLiteJDBC.insertIntoProducts(new CompleteProduct(
                         product.getId(),
                         product.getBrand(),
                         product.getName(),
@@ -207,8 +220,8 @@ public class Task implements Runnable{
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.MINUTES)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(45, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -240,9 +253,8 @@ public class Task implements Runnable{
             } else {return new PriceChangeResponse();}
         } catch (Exception e){
             e.printStackTrace();
-//            return new PriceChangeResponse();
+            return priceChangeRequest(weightId, colorId);
         }
-        return priceChangeRequest(weightId, colorId);
     }
 
     public static checkRepositoryResponse checkRepository (String productId, String colorId, String weightId, String count) {
@@ -250,8 +262,8 @@ public class Task implements Runnable{
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.MINUTES)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(45, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
