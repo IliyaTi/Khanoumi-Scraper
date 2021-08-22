@@ -13,7 +13,7 @@ public class SQLiteJDBC {
 
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
         } catch ( Exception e ) {
             System.err.println( e.getClass().getName() + ": " + e.getMessage() );
             System.exit(0);
@@ -27,7 +27,7 @@ public class SQLiteJDBC {
 
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
             System.out.println("Opened database successfully");
 
             stmt = c.createStatement();
@@ -62,7 +62,7 @@ public class SQLiteJDBC {
         Statement stmt = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
             stmt = c.createStatement();
             String sql = "CREATE TABLE IF NOT EXISTS brands " +
                     "(name       VARCHAR PRIMARY KEY)";
@@ -79,17 +79,23 @@ public class SQLiteJDBC {
         Statement stmt = null;
 
         try {
-            stmt = connection.createStatement();
-            String sql = "insert or replace into brands values ('" + name + "')";
-            stmt.executeUpdate(sql);
-            stmt.close();
-            connection.commit();
+//            stmt = connection.createStatement();
+//            String sql = "insert or replace into brands values ('" + name + "')";
+//            stmt.executeUpdate(sql);
+//            stmt.close();
+
+            PreparedStatement ps = connection.prepareStatement("insert or replace into brands values ( ? )");
+            ps.setString(1, name);
+
+            ps.executeUpdate();
+
+//            connection.commit();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
     }
 
-    public static void insertIntoProducts(CompleteProduct product, Connection c) {
+    public static synchronized void insertIntoProducts(CompleteProduct product, Connection c) {
 //        Connection c = null;
         Statement stmt = null;
 
@@ -99,19 +105,32 @@ public class SQLiteJDBC {
 //            c.setAutoCommit(false);
 //            System.out.println("Opened database successfully");
 
-            stmt = c.createStatement();
-            String sql = "INSERT INTO PRODUCTS (ID,brand,name,size,color,sizeId,colorId,price,discount) " +
-                    "VALUES ('" + product.getId() +"', '" + product.getBrand() + "', '" + product.getName() + "', '" + product.getSize() + "', '" + product.getColor() + "', '" + product.getSizeId() + "', '" + product.getColorId() +"', '" + product.getPrice() + "', '" + product.getDiscount() +"' );";
-            stmt.executeUpdate(sql);
+            PreparedStatement ps = c.prepareStatement("INSERT INTO PRODUCTS (ID,brand,name,size,color,sizeId,colorId,price,discount) " +
+                    "VALUES ( ? ,  ? ,  ? ,  ? ,  ? ,  ? ,  ? ,  ? ,  ?  );");
+            ps.setInt(1,product.getId());
+            ps.setString(2, product.getBrand());
+            ps.setString(3, product.getName());
+            ps.setString(4, product.getSize());
+            ps.setString(5, product.getColor());
+            ps.setString(6, product.getSizeId());
+            ps.setString(7, product.getColorId());
+            ps.setInt(8, product.getPrice());
+            ps.setInt(9, product.getDiscount());
 
-            stmt.close();
-            c.commit();
+            ps.executeUpdate();
+//            stmt = c.createStatement();
+//            String sql = "INSERT INTO PRODUCTS (ID,brand,name,size,color,sizeId,colorId,price,discount) " +
+//                    "VALUES ('" + product.getId() +"', '" + product.getBrand() + "', '" + product.getName() + "', '" + product.getSize() + "', '" + product.getColor() + "', '" + product.getSizeId() + "', '" + product.getColorId() +"', '" + product.getPrice() + "', '" + product.getDiscount() +"' );";
+//            stmt.executeUpdate(sql);
+
+//            stmt.close();
+//            c.commit();
 //            c.close();
         } catch ( Exception e ) {
             e.printStackTrace();
             System.exit(0);
         }
-        System.out.println(ANSI_PURPLE + "Records created successfully for " + product.getId() + " - " + product.getName() + ANSI_RESET);
+        System.out.println("! Records created successfully for " + product.getId() + " - " + product.getName());
     }
 
     public static ResultSet select() {
@@ -120,7 +139,7 @@ public class SQLiteJDBC {
         Statement stmt = null;
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiDB.sqlite");
             c.setAutoCommit(false);
             System.out.println("Opened database successfully");
 
@@ -146,7 +165,7 @@ public class SQLiteJDBC {
 
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiDB.db");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiDB.sqlite");
             c.setAutoCommit(false);
             System.out.println("Opened database successfully");
 
@@ -173,6 +192,7 @@ public class SQLiteJDBC {
 //        Statement stmt = null;
 //
 //        try {
+
 //            Class.forName("org.sqlite.JDBC");
 //            c = DriverManager.getConnection("jdbc:sqlite:khanoumi.db");
 //            c.setAutoCommit(false);

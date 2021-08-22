@@ -46,23 +46,36 @@ public class Main {
 
 
     public static void main(String[] args) {
-        SQLiteJDBC.createProductsTable();
-        SQLiteJDBC.createBrandsTable();
-        /// https://www.khanoumi.com/newproduct?thisID={id}
-
-
 
 //        try {
-//            Task.binarySearch("4429", "5675", "5433");
-//            Task.binarySearch("15581", "19368", "16610");
-//            Task.binarySearch("4490", "6064", "5505");
+////            Task.binarySearch("4429", "5675", "5433"); //1
+////            Task.binarySearch("15581", "19368", "16610"); //295
+////            Task.binarySearch("4490", "6064", "5505"); //36
+////            Task.binarySearch("35845", "62406", "36353"); //39
+////            Task.binarySearch("49017", "81089", "45844"); //89
+//            Task.binarySearch("19712", "27689", "21371"); //89
 //        } catch (Throwable throwable) {
 //            throwable.printStackTrace();
 //        }
 
+//        launchExecutor();
+        launchGatherer();
+
+    }
+
+    public static void launchGatherer(){
+        SQLiteJDBC.createProductsTable();
+        SQLiteJDBC.createBrandsTable();
 
         Connection c = null;
-        Statement stmt = null;
+//        Connection c1 = null;
+//        Connection c2 = null;
+//        Connection c3 = null;
+//        Connection c4 = null;
+//        Connection c5 = null;
+//        Connection c6 = null;
+//        Connection c7 = null;
+//        Statement stmt = null;
 
         RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
                 .handle(Exception.class)
@@ -71,48 +84,89 @@ public class Main {
 
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.db");
-            c.setAutoCommit(false);
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c1 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c2 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c3 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c4 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c5 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c6 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c7 = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+//            c.setAutoCommit(false);
+//            c1.setAutoCommit(false);
+//            c2.setAutoCommit(false);
+//            c3.setAutoCommit(false);
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
 
-        Observable<Integer> observable1 = Observable.range(75000,25000);
-        Observable<Integer> observable2 = Observable.range(50000,25000);
-        Observable<Integer> observable3 = Observable.range(25000,25000);
-        Observable<Integer> observable4 = Observable.range(    1,25000);
+        Observable<Integer> observable1 = Observable.range(87500,12500);
+        Observable<Integer> observable2 = Observable.range(75000,12500);
+        Observable<Integer> observable3 = Observable.range(62500,12500);
+        Observable<Integer> observable4 = Observable.range(50000,12500);
+        Observable<Integer> observable5 = Observable.range(37500,12500); //37500
+        Observable<Integer> observable6 = Observable.range(25000,12500);
+        Observable<Integer> observable7 = Observable.range(12500,12500);
+        Observable<Integer> observable8 = Observable.range(    1,12500);
 
         Connection finalC = c;
         observable1.doOnNext(x ->{
-            System.out.println(ANSI_CYAN + x +"- 1st getting product " + "-------------------------------------"+ ANSI_RESET);
+            System.out.println(x +"- 1st getting product " + "-------------------------------------");
 //            Runnable r = new Task(x, finalC);
             Failsafe.with(retryPolicy).run(new Task(x, finalC)::run);
 //            r.run();
-        }).subscribeOn(Schedulers.newThread()).doOnComplete(() -> System.out.println("finished")).subscribe();
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("1st finished")).subscribe();
 
         Connection finalC1 = c;
         observable2.doOnNext(x -> {
-            System.out.println(ANSI_CYAN + x +"- 2nd getting product " + "-------------------------------------"+ ANSI_RESET);
+            System.out.println(x +"- 2nd getting product " + "-------------------------------------");
 //            Runnable r = new Task(x, finalC1);
             Failsafe.with(retryPolicy).run(new Task(x,finalC1)::run);
 //            r.run();
-        }).subscribeOn(Schedulers.newThread()).subscribe();
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("2nd finished")).subscribe();
 
         Connection finalC2 = c;
         observable3.doOnNext(x -> {
-            System.out.println(ANSI_CYAN + x +"- 3rd getting product " + "-------------------------------------"+ ANSI_RESET);
+            System.out.println(x +"- 3rd getting product " + "-------------------------------------");
 //            Runnable r = new Task(x, finalC2);
             Failsafe.with(retryPolicy).run(new Task(x, finalC2)::run);
 //            r.run();
-        }).subscribeOn(Schedulers.newThread()).subscribe();
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("3rd finished")).subscribe();
 
         Connection finalC3 = c;
         observable4.doOnNext(x -> {
-            System.out.println(ANSI_CYAN + x +"- 4th getting product " + "-------------------------------------"+ ANSI_RESET);
+            System.out.println(x +"- 4th getting product " + "-------------------------------------");
 //            Runnable r = new Task(x, finalC3);
             Failsafe.with(retryPolicy).run(new Task(x, finalC3)::run);
 //            r.run();
-        }).doOnComplete(() -> Thread.sleep(999999999)).subscribe();
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("4th finished")).subscribe();
+
+        Connection finalC4 = c;
+        observable5.doOnNext(x -> {
+            System.out.println(x + "- 5th getting product " + "-------------------------------------");
+            Failsafe.with(retryPolicy).run(new Task(x, finalC4)::run);
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("5th finished")).subscribe();
+
+        Connection finalC5 = c;
+        observable6.doOnNext(x -> {
+            System.out.println(x + "- 6th getting product " + "-------------------------------------");
+            Failsafe.with(retryPolicy).run(new Task(x, finalC5)::run);
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("6th finished")).subscribe();
+
+        Connection finalC6 = c;
+        observable7.doOnNext(x -> {
+            System.out.println(x + "- 7th getting product " + "-------------------------------------");
+            Failsafe.with(retryPolicy).run(new Task(x, finalC6)::run);
+        }).subscribeOn(Schedulers.newThread()).doOnError(Throwable::printStackTrace).doOnComplete(() -> System.out.println("7th finished")).subscribe();
+
+        Connection finalC7 = c;
+        observable8.doOnNext(x -> {
+            System.out.println(x + "- 8th getting product " + "-------------------------------------");
+            Failsafe.with(retryPolicy).run(new Task(x, finalC7)::run);
+        }).doOnComplete(() -> {
+            System.out.println("8th finished");
+            Thread.sleep(999999999);
+        }).doOnError(Throwable::printStackTrace).subscribe();
 
 
         try {
@@ -120,6 +174,36 @@ public class Main {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+    }
+
+
+
+    public static void launchExecutor(){
+        SQLiteJDBC.createProductsTable();
+        SQLiteJDBC.createBrandsTable();
+
+        Connection c = null;
+
+        RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+                .handle(Exception.class)
+                .withDelay(Duration.ofSeconds(1))
+                .withMaxRetries(3);
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+            c = DriverManager.getConnection("jdbc:sqlite:khanoumiIDDB.sqlite");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+       //I THINK I SHOULD USE SUBMIT() SOMEWHERE.
+        ExecutorService service = Executors.newFixedThreadPool(8);
+        for (int i = 1; i < 99999; i++){
+
+            service.execute(new Task(i,c)::run);
+        }
+
+    }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -198,7 +282,4 @@ public class Main {
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-
-
-    }
 }

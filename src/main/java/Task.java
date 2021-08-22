@@ -13,6 +13,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,7 @@ public class Task implements Runnable{
             Connection.Response response = Jsoup.connect(url).timeout(99999999).ignoreHttpErrors(true).execute();
 
             if (response.statusCode() == 500){
-                System.out.println(ANSI_YELLOW + productId + "- response code = 500" + ANSI_RESET);
+                System.out.println("? " + productId + "- response code = 500");
                 return null;
             }
             return response.parse();
@@ -120,11 +121,12 @@ public class Task implements Runnable{
               THE WEIGHT ID FROM THERE.
             */
 
-           String script = document.select("div.prosize").first().select("script").dataNodes().toString();
-           Pattern numbers = Pattern.compile("\\d+");
-           Matcher matcher = numbers.matcher(script);
-           if (matcher.find()) weights.add(matcher.group());
-
+            if (!document.select("div.prosize").isEmpty()) {
+                String script = document.select("div.prosize").first().select("script").dataNodes().toString();
+                Pattern numbers = Pattern.compile("\\d+");
+                Matcher matcher = numbers.matcher(script);
+                if (matcher.find()) weights.add(matcher.group());
+            }
         }
         product.setSizes(weights);
         product.setSizeDescs(weightsDesc);
@@ -287,47 +289,80 @@ public class Task implements Runnable{
 
     }
 
-    public static int binarySearch (String productId, String colorId, String weightId) throws Throwable {
+    public static void binarySearch (String productId, String colorId, String weightId) throws Throwable {
+
+        if (Objects.equals(checkRepository(productId, colorId, weightId, "1").getStatus(), "false")){
+            System.out.println(0);
+        }
 
         int min = 0;
         int max = 500;
         int middle = 250;
-        String[] triple;
-        int target;
+//        String[] triple;
+        ArrayList<Integer> numbers = new ArrayList<>();
+        ArrayList<Boolean> statuses = new ArrayList<>();
+        int target = 0;
 
-        while (max - min >= 2) {
+        while (max - min > 1) {
             middle = (min + max)/2;
             System.out.println(middle);
             switch (checkRepository(productId, colorId, weightId, String.valueOf(middle)).getStatus()) {
                 case "true":
+                    numbers.add(middle);
+                    statuses.add(true);
                     min = middle;
                     break;
                 case "false":
+                    numbers.add(middle);
+                    statuses.add(false);
                     max = middle;
                     break;
             }
         }
 
-        triple = new String[]{
-                checkRepository(productId, colorId, weightId, String.valueOf(middle - 1)).getStatus(),
-                checkRepository(productId, colorId, weightId, String.valueOf(middle)).getStatus(),
-                checkRepository(productId, colorId, weightId, String.valueOf(middle + 1)).getStatus()
-        };
+        if (statuses.get(statuses.size() - 2) || statuses.get(statuses.size() - 1) || statuses.get(statuses.size() - 3)){
+            if (statuses.get(statuses.size() - 1)){
+                target = numbers.get(numbers.size() - 1);
+            } else if (statuses.get(statuses.size() - 2)){
+                target = numbers.get(numbers.size() - 2);
+            } else if (statuses.get(statuses.size() - 3)){
+                target = numbers.get(numbers.size() - 3);
+            }
+        }
+
+//        String res = (statuses.get(statuses.size() - 3).toString() + statuses.get(statuses.size() - 2).toString() + statuses.get(statuses.size() - 1).toString());
+//
+//        switch (res) {
+//            case "falsetruefalse":
+//                target = numbers.get(numbers.size() - 2);
+//                break;
+//            default : throw new Exception("YOU'RE FUCKED I'M FUCKED YOU'RE FUCKED BECAUSE I'M FUCKED");
+//        }
+
+        System.err.println(target);
+
+
+
+//        triple = new String[]{
+//                checkRepository(productId, colorId, weightId, String.valueOf(middle - 1)).getStatus(),
+//                checkRepository(productId, colorId, weightId, String.valueOf(middle)).getStatus(),
+//                checkRepository(productId, colorId, weightId, String.valueOf(middle + 1)).getStatus()
+//        };
 
 //        System.out.println(triple[0] + triple[1] + triple[2]);
 
-        switch (triple[0] + triple[1] + triple[2]){
-            case "truefalsefalse":
-                target = middle - 1;
-                break;
-            case "truetruefalse":
-                target = middle;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + triple[0] + triple[1] + triple[2]);
-        }
+//        switch (triple[0] + triple[1] + triple[2]){
+//            case "truefalsefalse":
+//                target = middle - 1;
+//                break;
+//            case "truetruefalse":
+//                target = middle;
+//                break;
+//            default:
+//                throw new IllegalStateException("Unexpected value: " + triple[0] + triple[1] + triple[2]);
+//        }
 //        System.out.println("target is: " + target);
-        return target;
+//        return target;
     }
 
 
